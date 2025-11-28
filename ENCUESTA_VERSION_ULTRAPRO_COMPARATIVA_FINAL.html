@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Encuesta Huellas Ambientales — Versión Final (Informe)</title>
+<style>
+:root{
+  --bg:#f4f8ff; --card:#fff; --p1:#0072ff; --p2:#00c6ff; --accent:#023e8a;
+  --mut:#6b7280; --radius:12px; --shadow:0 14px 36px rgba(2,18,45,0.06);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter, system-ui, Arial;background:var(--bg);color:var(--accent)}
+header{background:#fff;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--shadow);position:sticky;top:0;z-index:1000}
+.logo{font-weight:900;color:var(--p1);font-size:18px}
+.wrap{max-width:1100px;margin:22px auto;padding:0 16px}
+.card{background:var(--card);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);margin-bottom:14px}
+.title{font-size:20px;font-weight:800}
+.small{font-size:13px;color:var(--mut)}
+.grid{display:grid;grid-template-columns:1fr 360px;gap:16px}
+@media(max-width:920px){.grid{grid-template-columns:1fr} .sidebar{order:-1}}
+.input{width:100%;padding:10px;border-radius:10px;border:1px solid #e6eefc}
+.tile{padding:12px;border-radius:10px;border-left:6px solid var(--p1);display:flex;gap:10px;align-items:center;cursor:pointer;background:#fff}
+.tile:hover{transform:translateY(-4px);transition:all .18s}
+.progress{height:12px;background:#eaf4ff;border-radius:999px;overflow:hidden;margin-top:8px}
+.progress > div{height:100%;width:0;background:linear-gradient(90deg,var(--p1),var(--p2));transition:width .35s}
+.question{display:flex;gap:12px;align-items:center;padding:12px;border-radius:10px;background:linear-gradient(180deg,#fff,#fbfdff);margin-bottom:12px}
+.q-icon{font-size:20px}
+.options{display:flex;gap:8px;flex-wrap:wrap}
+.opt{padding:8px 12px;border-radius:10px;border:1px solid #e6eefc;cursor:pointer;font-weight:700;background:#fff}
+.opt.selected{background:linear-gradient(90deg,var(--p1),var(--p2));color:#fff;border-color:transparent;transform:translateY(-3px)}
+.results{padding:12px;border-radius:10px;background:#f7fbff;border:1px solid #eef6ff}
+.medal{font-size:34px}
+.stars{font-size:18px}
+.reco{white-space:pre-wrap;margin-top:12px;background:#fff;padding:12px;border-radius:10px;border:1px solid #eef6ff}
+.toast{position:fixed;right:18px;bottom:18px;background:#002e6b;color:#fff;padding:10px;border-radius:10px;box-shadow:0 8px 30px rgba(2,18,45,0.12);display:none}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">🌿 Evaluador Huellas Ambientales — Informe Final</div>
+  <div class="small">Comparación con promedio universitario • Medallas por diferencia</div>
+</header>
+
+<div class="wrap">
+  <div class="card">
+    <div class="title">Bienvenido</div>
+    <div class="small">Completa los datos, elige una categoría, responde 10 preguntas y obtén un informe detallado con recomendaciones ampliadas.</div>
+  </div>
+
+  <div class="grid">
+    <main>
+      <div id="card-datos" class="card">
+        <div class="title">Datos del encuestado</div>
+        <div class="small">Nombre, universidad, carrera y ciclo</div>
+        <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <input id="nombre" class="input" placeholder="Nombre completo">
+          <input id="universidad" class="input" placeholder="Universidad">
+          <input id="carrera" class="input" placeholder="Carrera">
+          <input id="ciclo" class="input" placeholder="Ciclo (ej: 6)">
+        </div>
+        <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+          <button id="btn-guardar" class="btn" style="padding:10px 14px;background:linear-gradient(90deg,var(--p1),var(--p2));color:#fff;border:0;border-radius:10px;font-weight:800">Guardar y continuar</button>
+          <button id="btn-demo" class="btn-ghost" style="padding:8px 12px">Cargar demo</button>
+          <div id="status" class="small" style="margin-left:auto;color:green"></div>
+        </div>
+      </div>
+
+      <div id="card-cats" class="card" style="display:none">
+        <div class="title">Selecciona categoría</div>
+        <div class="small">Cada categoría tiene 10 preguntas.</div>
+        <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="tile" data-cat="hidrica">💧 <div><strong>Huella Hídrica</strong><div class="small">Agua doméstica y consumo</div></div></div>
+          <div class="tile" data-cat="carbono">🚗 <div><strong>Huella de Carbono</strong><div class="small">Transporte y energía</div></div></div>
+          <div class="tile" data-cat="plastico">🛍️ <div><strong>Huella de Plástico</strong><div class="small">Envases y residuos</div></div></div>
+          <div class="tile" data-cat="ecologica">🌱 <div><strong>Huella Ecológica</strong><div class="small">Hábitos y consumo</div></div></div>
+        </div>
+        <div style="margin-top:12px"><button id="btn-volver" class="btn-ghost">⬅ Volver</button></div>
+      </div>
+
+      <div id="card-encuesta" class="card" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div id="titulo" class="title">Preguntas</div>
+            <div id="sub" class="small">Responde las 10 preguntas</div>
+          </div>
+          <div class="small">Progreso: <span id="prog-text">0/10</span></div>
+        </div>
+
+        <div class="progress"><div id="prog-bar"></div></div>
+
+        <div id="preguntas" style="margin-top:12px"></div>
+
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button id="btn-back-cat" class="btn-ghost">⬅ Regresar</button>
+          <button id="btn-calc" class="btn">Calcular resultado</button>
+        </div>
+      </div>
+
+      <div id="card-result" class="card" style="display:none">
+        <div class="title">Informe detallado</div>
+        <div id="resumen" class="results" style="margin-top:10px"></div>
+
+        <div id="detalles" class="reco" style="margin-top:12px"></div>
+
+        <div style="margin-top:12px;display:flex;gap:8px">
+          <button id="btn-download" class="btn">Descargar informe (TXT)</button>
+          <button id="btn-new" class="btn-ghost">Nueva evaluación</button>
+        </div>
+      </div>
+
+    </main>
+
+    <aside class="sidebar">
+      <div class="card">
+        <div class="title">Medalla & Estrellas</div>
+        <div id="medal" style="margin-top:10px;font-size:36px">🏅</div>
+        <div id="stars" style="margin-top:8px"></div>
+        <div id="mot" class="small" style="margin-top:8px"></div>
+      </div>
+
+      <div class="card">
+        <div class="title">Compartir (QR Web)</div>
+        <div class="small">Pega la URL pública (GitHub Pages) y genera el QR.</div>
+        <input id="input-url" class="input" placeholder="https://TUUSUARIO.github.io/encuesta-huellas/ENCUESTA_VERSION_ULTRAPRO.html" style="margin-top:8px">
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button id="btn-gen-qr" class="btn">Generar QR</button>
+          <button id="btn-copy-url" class="btn-ghost">Copiar URL</button>
+        </div>
+        <div style="margin-top:12px"><img id="qr" src="" alt="QR" style="width:160px;height:160px;border-radius:8px;border:1px solid #eef6ff"></div>
+      </div>
+
+      <div class="card">
+        <div class="title">Herramientas</div>
+        <div style="margin-top:8px;display:flex;gap:8px">
+          <button id="btn-export" class="btn">Exportar historial (CSV)</button>
+          <button id="btn-clear" class="btn-ghost">Limpiar historial</button>
+        </div>
+        <div class="small" style="margin-top:10px">Historial local guardado en tu navegador.</div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+/* ===== Averages (reference) ===== */
+const AVERAGES = {
+  hidrica: 50,
+  carbono: 65,
+  plastico: 55,
+  ecologica: 60
+};
+
+/* ===== Questions with icons ===== */
+const preguntas = {
+  hidrica: [
+    {q:"¿Cuántos minutos dura tu ducha diaria?", icon:"🚿"},
+    {q:"¿Con qué frecuencia lavas ropa a la semana?", icon:"🧺"},
+    {q:"¿Utilizas lavadora con carga completa?", icon:"🧼"},
+    {q:"¿Cuántos litros de agua embotellada consumes por semana?", icon:"🥤"},
+    {q:"¿Realizas riego de plantas en casa?", icon:"🌿"},
+    {q:"¿Qué tan seguido lavas platos a mano?", icon:"🍽️"},
+    {q:"¿Dejas el grifo abierto al cepillarte?", icon:"🪥"},
+    {q:"¿Cuántas veces a la semana consumes carne o lácteos?", icon:"🍖"},
+    {q:"¿Existen fugas de agua en tu vivienda?", icon:"🔧"},
+    {q:"¿Qué tan consciente eres del uso responsable del agua?", icon:"💧"}
+  ],
+  carbono: [
+    {q:"¿Cuál es tu medio de transporte principal?", icon:"🚗"},
+    {q:"¿Cuántas horas usas dispositivos electrónicos al día?", icon:"💻"},
+    {q:"¿Consumes carne roja semanalmente?", icon:"🍖"},
+    {q:"¿Qué tanto compras ropa nueva al mes?", icon:"🛍️"},
+    {q:"¿Gasto promedio mensual en electricidad?", icon:"💡"},
+    {q:"¿Cuántas veces pides delivery por semana?", icon:"🍱"},
+    {q:"¿Usas focos LED en casa?", icon:"💡"},
+    {q:"¿Has sembrado un árbol este año?", icon:"🌳"},
+    {q:"¿Reciclas papel o cartón?", icon:"♻️"},
+    {q:"¿Cuántas veces tomas taxi/mototaxi al día?", icon:"🚕"}
+  ],
+  plastico:[
+    {q:"¿Cuántas botellas de plástico usas por semana?", icon:"🥤"},
+    {q:"¿Compras bebidas en envases descartables?", icon:"🥤"},
+    {q:"¿Cuántas bolsas plásticas recibes al mes?", icon:"🛍️"},
+    {q:"¿Consumes comida en tecnopor?", icon:"🍱"},
+    {q:"¿Reutilizas envases plásticos?", icon:"🔄"},
+    {q:"¿Productos de higiene personal con plástico?", icon:"🧴"},
+    {q:"¿Usas tápers reutilizables?", icon:"🍱"},
+    {q:"¿Compras bebidas embotelladas?", icon:"🥤"},
+    {q:"¿Cuántas veces usas sorbetes?", icon:"🥤"},
+    {q:"¿Separación de residuos plásticos?", icon:"♻️"}
+  ],
+  ecologica:[
+    {q:"¿Consumes productos locales o importados?", icon:"🚜"},
+    {q:"¿Frecuencia de comida rápida semanal?", icon:"🍔"},
+    {q:"¿Horas con luces encendidas al día?", icon:"💡"},
+    {q:"¿Compras productos de origen animal?", icon:"🥩"},
+    {q:"¿Compras productos ecológicos?", icon:"🌱"},
+    {q:"¿Participas en actividades ambientales?", icon:"🤝"},
+    {q:"¿Frecuencia de uso de ventilador/aire?", icon:"🌀"},
+    {q:"¿Consumes frutas y verduras frecuentemente?", icon:"🥗"},
+    {q:"¿Cantidad de basura generada semanalmente?", icon:"🗑️"},
+    {q:"¿Consciencia sobre tu impacto ecológico?", icon:"🌍"}
+  ]
+};
+
+/* ===== State ===== */
+let user = {};
+let current = "";
+let answers = [];
+
+/* ===== Elements ===== */
+const panelCats = document.getElementById('card-cats');
+const panelInicio = document.getElementById('card-datos');
+const panelEncuesta = document.getElementById('card-encuesta');
+const panelResult = document.getElementById('card-result');
+const status = document.getElementById('status');
+const preguntasContainer = document.getElementById('preguntas');
+const progBar = document.getElementById('prog-bar');
+const progText = document.getElementById('prog-text');
+const medal = document.getElementById('medal');
+const stars = document.getElementById('stars');
+const mot = document.getElementById('mot');
+const qrImg = document.getElementById('qr');
+const inputUrl = document.getElementById('input-url');
+const toast = document.getElementById('toast');
+
+/* Audio */
+let audioCtx;
+function tone(type){
+  try{
+    if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    if(type==='click'){ o.frequency.value=1000; g.gain.value=0.01; }
+    if(type==='success'){ o.frequency.value=880; g.gain.value=0.02; }
+    if(type==='error'){ o.frequency.value=220; g.gain.value=0.02; }
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(); o.stop(audioCtx.currentTime + 0.08);
+  }catch(e){console.warn('Audio error',e);}
+}
+
+/* Events */
+document.getElementById('btn-demo').addEventListener('click', ()=>{
+  document.getElementById('nombre').value='Alumno Demo';
+  document.getElementById('universidad').value='Universidad X';
+  document.getElementById('carrera').value='Ing Ambiental';
+  document.getElementById('ciclo').value='6';
+  status.textContent='Demo cargado';
+});
+
+document.getElementById('btn-guardar').addEventListener('click', ()=>{
+  const nombre = document.getElementById('nombre').value.trim();
+  if(!nombre){ alert('Ingresa tu nombre'); return; }
+  user.nombre = nombre;
+  user.universidad = document.getElementById('universidad').value.trim();
+  user.carrera = document.getElementById('carrera').value.trim();
+  user.ciclo = document.getElementById('ciclo').value.trim();
+  user.fecha = new Date().toISOString();
+  status.textContent='Datos guardados ✓';
+  tone('click');
+  panelInicio.style.display='none';
+  panelCats.style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+});
+
+/* Tiles */
+document.querySelectorAll('.tile').forEach(t=>{
+  t.addEventListener('click', ()=>{
+    current = t.getAttribute('data-cat');
+    startSurvey(current);
+  });
+});
+document.getElementById('btn-volver').addEventListener('click', ()=>{ panelCats.style.display='none'; panelInicio.style.display='block'; });
+
+document.getElementById('btn-back-cat').addEventListener('click', ()=>{ panelEncuesta.style.display='none'; panelCats.style.display='block'; tone('click'); });
+
+document.getElementById('btn-calc').addEventListener('click', ()=>{
+  const total = preguntas[current].length;
+  const answered = answers.filter(v=>typeof v==='number').length;
+  if(answered < total){ tone('error'); if(!confirm('No has respondido todas las preguntas. Calcular igual?')) return; }
+  const sum = answers.reduce((a,b)=>a+Number(b||0),0);
+  showReport(sum);
+});
+
+/* QR generation */
+document.getElementById('btn-gen-qr').addEventListener('click', ()=>{
+  const url = inputUrl.value.trim();
+  if(!url){ alert('Pega la URL pública de GitHub Pages'); return; }
+  qrImg.src = 'https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=' + encodeURIComponent(url);
+  showToast('QR generado');
+});
+document.getElementById('btn-copy-url').addEventListener('click', ()=>{
+  const val = inputUrl.value.trim();
+  if(!val){ alert('Pega la URL pública para copiar'); return; }
+  navigator.clipboard.writeText(val).then(()=> showToast('URL copiada'));
+});
+
+/* Export & clear */
+document.getElementById('btn-export').addEventListener('click', exportCSV);
+document.getElementById('btn-clear').addEventListener('click', ()=>{
+  if(confirm('Limpiar historial local?')){ localStorage.removeItem('encuesta_history_v3'); showToast('Historial limpiado'); }
+});
+
+/* Survey render */
+function startSurvey(cat){
+  answers = [];
+  preguntasContainer.innerHTML = '';
+  progBar.style.width = '0%'; progText.innerText = '0/10';
+  document.getElementById('titulo').innerText = 'Preguntas — ' + capitalize(cat);
+  document.getElementById('sub').innerText = 'Responde las 10 preguntas';
+  preguntas[cat].forEach((it, idx)=>{
+    const q = document.createElement('div'); q.className='question';
+    q.innerHTML = `<div class="q-icon">${it.icon}</div><div style="flex:1"><div style="font-weight:800">${idx+1}. ${it.q}</div><div class="options" id="opts-${idx}"></div></div>`;
+    preguntasContainer.appendChild(q);
+    const optBox = document.getElementById('opts-'+idx);
+    const labels = ['Muy bajo','Bajo','Moderado','Alto','Muy alto'];
+    for(let s=0;s<5;s++){
+      const b = document.createElement('div'); b.className='opt'; b.tabIndex=0; b.innerText = labels[s];
+      b.addEventListener('click', ()=> selectOpt(idx,s,b));
+      optBox.appendChild(b);
+    }
+  });
+  panelCats.style.display='none';
+  panelEncuesta.style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function selectOpt(i, score, el){
+  const box = el.parentNode;
+  box.querySelectorAll('.opt').forEach(x=>x.classList.remove('selected'));
+  el.classList.add('selected');
+  answers[i] = score;
+  updateProg();
+  tone('click');
+}
+function updateProg(){
+  const total = preguntas[current].length;
+  const answered = answers.filter(v=>typeof v==='number').length;
+  progBar.style.width = Math.round((answered/total)*100) + '%';
+  progText.innerText = `${answered}/${total}`;
+}
+
+/* Report generation (Option C: detailed report) */
+function showReport(sum){
+  panelEncuesta.style.display='none';
+  panelResult.style.display='block';
+  const max = preguntas[current].length * 4;
+  const pct = Math.round((sum / max) * 100); // higher = worse
+  const avg = AVERAGES[current];
+  const diff = Math.round(avg - pct); // positive => user better (lower impact)
+  // medal logic based on difference
+  let medalEmoji='🥉', starCount=1, interpretation='Necesitas mejorar en algunas áreas.';
+  if(diff >= 20){ medalEmoji='🥇'; starCount=5; interpretation='Excelente — significativamente mejor que el promedio.'; }
+  else if(diff >= 0){ medalEmoji='🥈'; starCount=3; interpretation='Buen desempeño — levemente mejor o igual al promedio.'; }
+  else { medalEmoji='🥉'; starCount=1; interpretation='Por encima del promedio — considera acciones de mejora.'; }
+  // build report text (long format)
+  const header = `Informe detallado — ${capitalize(current)}\n\nUsuario: ${user.nombre}\nUniversidad: ${user.universidad}\nCarrera: ${user.carrera}\nCiclo: ${user.ciclo}\nFecha: ${new Date().toLocaleString()}\n\nResultado: ${pct}% (mayor % = mayor impacto)\nPromedio universitario: ${avg}%\nDiferencia: ${diff}% (${ diff>0 ? 'Mejor que el promedio' : 'Peor que el promedio' })\n\n`;
+  // expanded recommendations per category (3-6 bullets with estimated impact)
+  let recommendations = '';
+  if(current==='hidrica'){
+    recommendations = `Recomendaciones detalladas (Hídrica):\n\n1) Duchas de 5–8 minutos: reduce ~10–20% del consumo diario.\n2) Usar lavadora con carga completa y modo eco: ahorro estimado 10–15%.\n3) Reutilizar aguas grises para riego (si es posible): reducción adicional ~10%.\n4) Evitar agua embotellada cuando sea posible; usar botella reutilizable.\n5) Revisar y reparar fugas: una fuga pequeña puede aumentar consumo en 15–30%.\n6) Instalar aireadores/regaderas ahorradoras: ahorro 20–40% en duchas.\n\nSugerencia de plan de acción: Elige 2 acciones de arriba y ponles fecha (ej. instalar aireador antes del 15/12).`;
+  } else if(current==='carbono'){
+    recommendations = `Recomendaciones detalladas (Carbono):\n\n1) Prioriza caminar, bici o transporte público en trayectos cortos (reduce emisiones ~20–40%).\n2) Reducir consumo de carne roja a 1 vez por semana o menos (ahorro ~10–25% en emisiones personales).\n3) Apagar equipos y desconectar cargadores para evitar consumo en stand-by (~5–10%).\n4) Sustituir bombillas por LED (ahorro energético 10–30%).\n5) Agrupar compras y reducir deliveries: menos viajes/paquetes (ahorro indirecto ~5–15%).\n6) Considerar plantación de árboles en actividades de campus (compensación y consciencia).\n\nPlan de acción sugerido: Implementa 2 cambios durante 30 días y vuelve a evaluar para medir mejora.`;
+  } else if(current==='plastico'){
+    recommendations = `Recomendaciones detalladas (Plástico):\n\n1) Llevar botella reutilizable al campus (reducción inmediata de botellas de plástico).\n2) Evitar envases de tecnopor y preferir opciones retornables o a granel.\n3) Reusar tápers y recipientes en pedidos para llevar.\n4) Llevar bolsas reutilizables al comprar; evitar bolsas plásticas de una sola vez.\n5) Separar residuos plásticos y llevarlos a puntos de reciclaje (reduce contaminación local).\n6) Elegir productos con menos embalaje y promover compras a granel.\n\nPlan de acción: Reduce 3 artículos de plástico desechable por semana durante 2 meses y mide cambio.`;
+  } else {
+    recommendations = `Recomendaciones detalladas (Ecológica):\n\n1) Prioriza productos locales y de temporada (reduce huella de transporte y embalaje).\n2) Reduce consumo de comida rápida y elige opciones con menor empaquetado (impacto estimado 10–20%).\n3) Implementa compostaje de restos orgánicos si es posible (reduce residuos en vertedero ~30%).\n4) Compra ropa de segunda mano o de calidad para reducir consumo textil.\n5) Participa en campañas ambientales del campus para amplificar impacto.\n6) Ahorra energía: apaga luces y desconecta equipos al final del día.\n\nPlan de acción: Adopta una medida por mes y documenta el cambio.`;
+  }
+  // show on page
+  document.getElementById('resumen').innerText = header;
+  document.getElementById('detalles').innerText = recommendations;
+  // medal & stars UI
+  medal.innerText = medalEmoji;
+  stars.innerHTML = ''; for(let i=0;i<starCount;i++){ stars.innerHTML += '⭐'; }
+  mot.innerText = interpretation + ` (Diferencia vs promedio: ${diff}%)`;
+  // save to history
+  saveHistory({user, category: current, score: sum, pct, avg, diff, fecha: new Date().toISOString()});
+  tone('success');
+}
+
+/* save history */
+function saveHistory(rec){
+  try{
+    const key='encuesta_history_v3';
+    const arr = JSON.parse(localStorage.getItem(key) || '[]');
+    arr.push(rec);
+    localStorage.setItem(key, JSON.stringify(arr));
+  }catch(e){console.warn(e);}
+}
+
+/* export csv */
+function exportCSV(){
+  const key='encuesta_history_v3';
+  const data = JSON.parse(localStorage.getItem(key) || '[]');
+  if(!data.length){ alert('No hay registros'); return; }
+  const rows=[['Nombre','Universidad','Carrera','Ciclo','Categoria','Puntaje','Porcentaje','Promedio','Diferencia','Fecha']];
+  data.forEach(r => rows.push([r.user.nombre||'', r.user.universidad||'', r.user.carrera||'', r.user.ciclo||'', r.category||'', r.score||'', r.pct||'', r.avg||'', r.diff||'', r.fecha||'']));
+  const csv = rows.map(r => r.map(c => '"' + String(c).replace(/"/g,'""') + '"').join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'historial_encuestas.csv'; document.body.appendChild(a); a.click(); a.remove();
+  showToast('CSV descargado');
+}
+
+/* helpers */
+function capitalize(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
+function showToast(msg, t=1500){ toast.style.display='block'; toast.textContent=msg; setTimeout(()=> toast.style.display='none', t); }
+
+/* export download of report */
+document.getElementById('btn-download').addEventListener('click', ()=>{
+  const header = document.getElementById('resumen').innerText;
+  const det = document.getElementById('detalles').innerText;
+  const text = header + '\n\n' + det;
+  const blob = new Blob([text], {type:'text/plain;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='informe_huella.txt'; document.body.appendChild(a); a.click(); a.remove();
+});
+
+/* new evaluation */
+document.getElementById('btn-new').addEventListener('click', ()=>{
+  answers=[]; current=''; panelResult.style.display='none'; panelCats.style.display='block'; document.querySelectorAll('.card.fade-enter')[0].scrollIntoView({behavior:'smooth'});
+});
+
+/* start survey logic reused from previous structure */
+function startSurvey(cat){
+  answers=[]; preguntasContainer.innerHTML=''; progBar.style.width='0%'; progText.innerText='0/10';
+  document.getElementById('titulo').innerText = 'Preguntas — ' + capitalize(cat);
+  document.getElementById('sub').innerText = 'Responde las 10 preguntas';
+  preguntas[cat].forEach((it, idx)=>{
+    const q = document.createElement('div'); q.className='question';
+    q.innerHTML = `<div class="q-icon">${it.icon}</div><div style="flex:1"><div style="font-weight:800">${idx+1}. ${it.q}</div><div class="options" id="opts-${idx}"></div></div>`;
+    preguntasContainer.appendChild(q);
+    const optBox = document.getElementById('opts-'+idx);
+    const labels = ['Muy bajo','Bajo','Moderado','Alto','Muy alto'];
+    for(let s=0;s<5;s++){
+      const b = document.createElement('div'); b.className='opt'; b.tabIndex=0; b.innerText = labels[s];
+      b.addEventListener('click', ()=> selectOpt(idx,s,b));
+      optBox.appendChild(b);
+    }
+  });
+  panelCats.style.display='none'; panelEncuesta.style.display='block'; window.scrollTo({top:0,behavior:'smooth'});
+}
+function selectOpt(i, score, el){
+  const box = el.parentNode; box.querySelectorAll('.opt').forEach(x=>x.classList.remove('selected'));
+  el.classList.add('selected'); answers[i]=score; updateProg(); tone('click');
+}
+function updateProg(){ const total = preguntas[current].length; const answered = answers.filter(v=>typeof v==='number').length; progBar.style.width = Math.round((answered/total)*100) + '%'; progText.innerText = `${answered}/${total}`; }
+
+/* wire buttons that existed earlier */
+document.getElementById('btn-calc').addEventListener('click', ()=>{ /* handled above */ });
+document.getElementById('btn-guardar').addEventListener('keydown',(e)=>{ if(e.key==='Enter') document.getElementById('btn-guardar').click(); });
+
+/* on load */
+showToast('Lista: encuesta lista. El informe final mostrará recomendaciones ampliadas.',2000);
+</script>
+</body>
+</html>
